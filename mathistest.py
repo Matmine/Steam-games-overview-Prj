@@ -1,47 +1,42 @@
-"""infos à récup de steam db
-
-Name :
-Developpeur : 
-Supported system :
-Release date :
-global Review :
-Nb happy :
-Nb sad :
+"""infos à récup de steam chart
+Id
+GameName
+CurrentPlayers
+PeakPlayers
+HoursPlayed
 """
-
+import re
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 # Define the URL and link to click
-url = "https://steamdb.info"
-link_to_click_1 = "Charts"
+url = "https://steamcharts.com/top"
+url_suffixes = ["", "/p.2", "/p.3", "/p.4"]
 
 # Make a request to the main page and parse the HTML using BeautifulSoup
-response = requests.get(url)
-soup = BeautifulSoup(response.content, "html.parser")
+with open('steam_data_mathis.csv', mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['ID', 'Name', 'Current Players', 'Peak Players', 'Hours Played'])
+    for url_suffix in url_suffixes :
 
-# Find the link to click and extract its URL
-link = soup.find('a', class_='heading2 gbs-font-vanguard-red')
-if link is None:
-    print(f"Link '{link_to_click_1}' not found on page")
-    exit()
-link_url = link.get("href")
+        response = requests.get(url+url_suffix)
+        soup = BeautifulSoup(response.content, "html.parser")
 
-# Make a request to the linked page and parse the HTML using BeautifulSoup
-response = requests.get(link_url)
-soup = BeautifulSoup(response.content, "html.parser")
+        topGamesInfos = soup.findAll("tr")
+        
+         # Loop through each game's row in the HTML and extract relevant information
+        for game in topGamesInfos[1:]:
+            game_info = game.findAll('td')
+            game_id = game_info[1].find('a')
+            game_id = game_id['href'].split('/')[-1] if game_id else ''
+            game_id = re.sub('[^0-9]', '', game_id) 
+            game_name = game_info[1].text.strip()
+            current_players = game_info[2].text.strip()
+            peak_players = game_info[4].text.strip()
+            hours_played = game_info[5].text.strip()
 
-# Extract information from the HTML fields using XPath expressions
-game_name = soup.find("div", {"class": "css-truncate"}).text.strip()
-if game_name is None:
-    print("game_name not found")
-    exit()
+            # Write the game's information to the CSV file
+            writer.writerow([game_id, game_name, current_players, peak_players, hours_played])
 
 
-players_now = soup.find("div", {"class": "text-center green"}).text.strip()
-if players_now is None:
-    print("players_now not found")
-    exit()
-
-# Print the extracted information
-print(f"Players Now on {game_name} : {players_now}")

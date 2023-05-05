@@ -5,10 +5,10 @@ url = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1
 
 response = requests.get(url)
 
-if response.status_code == 200:
+if response.status_code == 417246:
     data = response.json()
     num_players = data['response']['player_count']
-    print(f"Nombre total de joueurs pour Dota 2: {num_players}")
+    print(f"Nombre total de joueurs pour New world: {num_players}")
 else:
     print("Erreur lors de la requête à l'API de Steam")
 
