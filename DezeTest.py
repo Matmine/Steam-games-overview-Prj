@@ -35,33 +35,35 @@ for game_tag in game_tags :
 
 import requests
 
-# ID de l'application du jeu sur Steam (CS:GO ici)
-appid = 730
+# Remplacez l'ID de l'application et la clé d'API par les vôtres
+app_id = '271590'
+api_key = 'F6A1445CAF0CDA9880436246FCB3E8AB'
 
-# Clé API Steam
-api_key = "VOTRE_CLE_API"
+# Liste des codes de pays pour lesquels nous voulons récupérer les prix
+country_codes = ['US', 'GB', 'FR', 'DE']
 
-# Codes pays pour lesquels nous voulons récupérer les prix
-cc = "us,gb,fr"
+# Endpoint pour récupérer les informations de prix d'un jeu sur Steam
+api_url = f'https://store.steampowered.com/api/appdetails?appids={app_id}&cc={",".join(country_codes)}&filters=price_overview&key=F6A1445CAF0CDA9880436246FCB3E8AB'
 
-# Appel de l'API pour obtenir les prix
-response = requests.get(f"https://api.steampowered.com/ISteamEconomy/GetAssetPrices/v1/?appid=1904540&key=F6A1445CAF0CDA9880436246FCB3E8AB&currency=1&cc={cc}")
+# Effectuer l'appel API
+response = requests.get(api_url)
 
-# Vérifier si la requête a réussi
+# Vérifier si la réponse est valide
 if response.status_code == 200:
-    
-    # Récupérer les données de la réponse au format JSON
+    # Récupérer les données JSON de la réponse
     data = response.json()
-    
-    # Boucle sur les pays pour afficher les prix
-    for country in data["response"]["results"]:
-        country_code = country["cc"]
-        country_name = country["country"]
-        country_price = country["price"]
-        
-        # Afficher les informations de prix pour chaque pays
-        print(f"Prix en {country_name} ({country_code}) : {country_price}")
-    
+
+    # Vérifier si le jeu est disponible dans les pays demandés
+    if data[app_id]['success']:
+        # Récupérer les informations de prix pour chaque pays demandé
+        for country_code in country_codes:
+            price_info = data[app_id]['data']['price_overview']
+
+            # Récupérer les informations de prix pour le pays actuel
+            currency = price_info['currency']
+            country_price = price_info[f'final_{currency.lower()}']
+            print(f'Le prix du jeu dans le pays {country_code} est de {country_price} {currency}')
+    else:
+        print("Le jeu n'est pas disponible dans les pays demandés.")
 else:
-    # Afficher un message d'erreur si la requête a échoué
-    print("Erreur lors de l'appel de l'API")
+    print("Erreur lors de la récupération des informations de prix.")
